@@ -1,0 +1,47 @@
+import http.client  # Pour la connexion HTTP/HTTPS
+import ssl  # Pour gérer les connexions SSL/TLS
+import zipfile  # Pour manipuler des fichiers ZIP
+
+# Détails de la connexion
+host = "37.110.193.30"
+port = 8888
+url = "/test100.sql.zip"
+
+# Désactivation de la vérification SSL (attention aux risques de sécurité)
+context = ssl._create_unverified_context()
+
+try:
+    # Connexion HTTPS au serveur
+    conn = http.client.HTTPSConnection(host, port, context=context)
+    
+    # Envoyer une requête GET pour télécharger le fichier
+    conn.request("GET", url)
+    
+    # Obtenir la réponse du serveur
+    response = conn.getresponse()
+
+    # Si le code de réponse est 200 (OK), on télécharge le fichier
+    if response.status == 200:
+        # Nom du fichier à enregistrer
+        fichier_zip = "test100.sql.telechargement.zip"
+        
+        # Ouvrir un fichier en mode écriture binaire pour sauvegarder le fichier téléchargé
+        with open(fichier_zip, 'wb') as f:
+            f.write(response.read())  # Écrire le contenu dans le fichier
+        
+        print(f"Fichier téléchargé et enregistré sous: {fichier_zip}")
+        
+        # Ouvrir le fichier ZIP téléchargé pour extraire son contenu
+        with zipfile.ZipFile(fichier_zip, 'r') as zip_ref:
+            zip_ref.extractall("extracted_files")  # Extraire tout le contenu dans un dossier "extracted_files"
+            print(f"Fichier extrait dans le dossier 'extracted_files'.")
+    else:
+        print(f"Échec du téléchargement. Statut: {response.status}")
+
+    # Fermer la connexion analyse
+    
+    conn.close()
+
+# Gestion des exceptions en cas d'erreur
+except Exception as e:
+    print(f"Erreur lors du téléchargement : {e}")
