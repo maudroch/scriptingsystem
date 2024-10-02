@@ -1,45 +1,41 @@
 #!/bin/bash
 
-# Script pour installer et configurer Apache2 sur une VM Linux
-
-# Fonction pour afficher un message d'erreur et quitter
-function error_exit {
-    echo "$1" 1>&2
-    exit 1
-}
-
-# Mettre à jour le système
-echo "Mise à jour du système..."
-sudo apt update && sudo apt upgrade -y || error_exit "Erreur lors de la mise à jour du système."
-
-# Installer Apache2
-echo "Installation d'Apache2..."
-sudo apt install apache2 -y || error_exit "Erreur lors de l'installation d'Apache2."
-
-# Démarrer le service Apache2
-echo "Démarrage du service Apache2..."
-sudo systemctl start apache2 || error_exit "Erreur lors du démarrage d'Apache2."
-
-# Activer Apache2 pour démarrer au démarrage du système
-sudo systemctl enable apache2 || error_exit "Erreur lors de l'activation d'Apache2 au démarrage."
-
-# Configurer le pare-feu (si ufw est utilisé)
-if command -v ufw >/dev/null 2>&1; then
-    echo "Configuration du pare-feu..."
-    sudo ufw allow 'Apache Full' || error_exit "Erreur lors de la configuration du pare-feu."
-    sudo ufw enable || error_exit "Erreur lors de l'activation du pare-feu."
+# Vérifier si l'utilisateur est root
+if [ "$EUID" -ne 0 ]; then
+  echo "Veuillez exécuter ce script en tant que root ou avec sudo."
+  exit 1
 fi
 
-# Vérifier l'état du service Apache
-echo "Vérification de l'état du service Apache2..."
+echo "Mise à jour des paquets..."
+# Mettre à jour les paquets existants
+sudo apt update -y
+
+echo "Installation d'Apache2..."
+# Installer Apache2
+sudo apt install apache2 -y
+
+echo "Activation d'Apache2 au démarrage..."
+# Activer Apache2 pour qu'il démarre au démarrage du système
+sudo systemctl enable apache2
+
+echo "Démarrage d'Apache2..."
+# Démarrer le service Apache2
+sudo systemctl start apache2
+
+echo "Configuration du pare-feu..."
+# Vérifier si UFW (Uncomplicated Firewall) est installé et activer les règles pour Apache
+if command -v ufw >/dev/null 2>&1; then
+  sudo ufw allow 'Apache Full'
+  sudo ufw enable
+fi
+
+echo "Vérification du statut d'Apache2..."
+# Vérifier que le service est actif
 sudo systemctl status apache2
 
-# (Optionnel) Cloner un dépôt Git dans le répertoire par défaut d'Apache
-read -p "Souhaitez-vous cloner un dépôt Git dans /var/www/html ? (y/n): " clone_choice
-if [[ "$clone_choice" == "y" ]]; then
-    read -p "Entrez l'URL du dépôt Git : " git_repo
-    echo "Clonage du dépôt Git..."
-    sudo git clone "$git_repo" /var/www/html || error_exit "Erreur lors du clonage du dépôt Git."
+# Optionnel: Ouvrir le navigateur pour vérifier que le serveur web fonctionne (uniquement pour environnement de bureau)
+if command -v xdg-open >/dev/null 2>&1; then
+  xdg-open http://localhost
 fi
 
-echo "Configuration terminée ! Vous pouvez accéder à votre serveur Apache sur http://localhost"
+echo "Installation et configuration d'Apache2 terminée avec succès."
