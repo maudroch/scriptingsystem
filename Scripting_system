@@ -3,7 +3,7 @@ import zipfile
 import os
 
 # Variables
-server_ip = 'http://192.168.73.11'
+server_ip = 'http://192.168.1.45'#mettre l'adresse IP de la VM
 file_path = 'test100.sql.zip'
 file_url = f'{server_ip}/{file_path}'
 
