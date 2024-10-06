@@ -56,5 +56,11 @@ sudo systemctl status vsftpd
 
 sudo ufw allow 21/tcp
 
+lftp -u anonymous, ftp://10.0.2.15
+
+sudo mkdir /srv/ftp/dossier_partage
+
+sudo chmod 755 /srv/ftp/dossier_partage
+
 hostname -I  #pour voir l'ip
 
