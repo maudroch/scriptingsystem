@@ -31,7 +31,7 @@ sudo chmod 755 /srv/sftp
 # Crée un répertoire de partage pour un utilisateur (à adapter selon vos besoins)
 sudo mkdir -p /srv/sftp/dossier_partage
 sudo chown :sftpusers /srv/sftp/dossier_partage
-sudo chmod 775 /srv/sftp/dossier_partage
+sudo chmod 777 /srv/sftp/dossier_partage
 
 # Redémarre le service SSH pour appliquer les changements
 sudo systemctl restart ssh
