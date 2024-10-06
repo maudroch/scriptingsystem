@@ -21,6 +21,40 @@ sftp_password = 'tse'  # Password for SFTP
 remote_directory = '/srv/sftp/dossier_partage'  # Remote directory on VM2
 remote_filename = 'test100.sql'  # Name of the SQL file to upload
 
+# Function to handle host key verification
+def host_key_verification(host, key):
+    # Load known host keys from a file or define your own behavior
+    known_hosts_file = os.path.expanduser('~/.ssh/known_hosts')
+    
+    # Check if the host key is already in known_hosts
+    if not os.path.exists(known_hosts_file):
+        with open(known_hosts_file, 'w') as f:
+            pass  # Create an empty known hosts file if it doesn't exist
+
+    with open(known_hosts_file, 'r') as f:
+        known_hosts = f.readlines()
+
+    # Check if the host key is already known
+    for line in known_hosts:
+        if host in line:
+            print(f"Host key for {host} is already known.")
+            return True  # Host key is already known
+    
+    # Ask the user if they want to trust the new host key
+    print(f"New host key detected for {host}:")
+    print(f"Key: {key.get_fingerprint()}")
+    response = input("Do you want to trust this host key? (yes/no): ")
+    
+    if response.lower() == 'yes':
+        # Add the new host key to known_hosts
+        with open(known_hosts_file, 'a') as f:
+            f.write(f"{host} {key.get_name()} {key.get_base64()}\n")
+        print(f"Host key for {host} added to known hosts.")
+        return True
+    else:
+        print("Connection refused.")
+        return False
+
 # Step 1: Download the ZIP file from VM1
 try:
     urllib.request.urlretrieve(file_url, local_filename)
@@ -44,8 +78,12 @@ except Exception as e:
 local_sql_file_path = os.path.join(extraction_directory, 'test100.sql')  # Path to the SQL file
 
 try:
-    # Connect to the SFTP server
-    with pysftp.Connection(host=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password)  as sftp:
+    # Create connection options with custom host key verification
+    cnopts = pysftp.CnOpts()
+    cnopts.hostkeys = pysftp.HostKeys()
+
+    # Connect to the SFTP server with host key verification
+    with pysftp.Connection(host=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password, cnopts=cnopts, hostkey_callback=host_key_verification) as sftp:
         print(f"Connected to SFTP server {sftp_host} on port {sftp_port}")         
 
         # Change to the remote directory
