@@ -1,0 +1,8 @@
+#client
+
+lftp -u anonymous, ftp://10.0.2.15
+
+#get nom_du_fichier  pour télécharger un fichier
+#put nom_du_fichier pour téléverser un fichier
+
+#bye pour se déco
