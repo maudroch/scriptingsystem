@@ -56,5 +56,5 @@ sudo systemctl status vsftpd
 
 sudo ufw allow 21/tcp
 
-#hostname -I  pour voir l'ip
+hostname -I  #pour voir l'ip
 
