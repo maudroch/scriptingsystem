@@ -2,6 +2,8 @@ import urllib.request
 import zipfile
 import os
 import pysftp
+import tarfile  ### Ajouté : Pour compresser le fichier en .tgz
+from datetime import datetime  ### Ajouté : Pour récupérer la date actuelle
 
 # Variables for downloading (from VM1)
 server_ip = 'http://161.3.49.126'  # IP of the VM containing the ZIP file (VM1)
@@ -19,7 +21,10 @@ sftp_port = 22  # Port of the SFTP server
 sftp_username = 'tse'  # Username for SFTP
 sftp_password = 'tse'  # Password for SFTP
 remote_directory = '/srv/sftp/dossier_partage'  # Remote directory on VM2
-remote_filename = 'test100.sql'  # Name of the SQL file to upload
+
+# Generate current date in the format YYYYDDMM for the new file name
+date_str = datetime.now().strftime('%Y%d%m')  ### Ajouté : Générer le nom du fichier basé sur la date
+remote_filename = f'{date_str}.tgz'  ### Ajouté : Utiliser le nom de fichier .tgz avec la date
 
 # Step 1: Download the ZIP file from VM1
 try:
@@ -39,10 +44,20 @@ try:
 except Exception as e:
     print(f"An error occurred during extraction: {e}")
 
-# Step 3: Upload the extracted SQL file to SFTP server
-# Assuming the extracted SQL file is named test100.sql
+# Path to the extracted SQL file
 local_sql_file_path = os.path.join(extraction_directory, 'test100.sql')  # Path to the SQL file
 
+# Step 3: Create a .tgz file from the extracted SQL file
+tgz_file_path = os.path.join(current_dir, f'{date_str}.tgz')  ### Ajouté : Créer le chemin du fichier .tgz
+
+try:
+    with tarfile.open(tgz_file_path, "w:gz") as tar:  ### Ajouté : Compresser le fichier en .tgz
+        tar.add(local_sql_file_path, arcname=os.path.basename(local_sql_file_path))
+    print(f"File compressed as {tgz_file_path}")
+except Exception as e:
+    print(f"An error occurred during compression: {e}")
+
+# Step 4: Upload the .tgz file to SFTP server
 try:
     # Connect to the SFTP server
     with pysftp.Connection(host=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password)  as sftp:
@@ -52,30 +67,9 @@ try:
         sftp.chdir(remote_directory)
         print(f"Changed to remote directory: {remote_directory}")
 
-        ### # Check if the remote file exists ###
-        if sftp.exists(remote_filename):
-            print(f"The remote file {remote_filename} exists. Checking if it has been modified...")
-
-            ### # Get the remote file's attributes (size, modification time, etc.) ###
-            remote_file_info = sftp.stat(remote_filename)
-
-            ### # Get the size of the local file ###
-            local_file_size = os.path.getsize(local_sql_file_path)
-
-            ### # Compare file sizes ###
-            if local_file_size == remote_file_info.st_size:
-                print("The file has not been modified (same size). No need to upload.")
-            else:
-                print("The file has been modified (size mismatch). Proceeding with upload.")
-
-                # Upload the SQL file if it has been modified
-                sftp.put(local_sql_file_path, remote_filename)
-                print(f"File {remote_filename} uploaded successfully to SFTP server.")
-
-        else:
-            print(f"The remote file {remote_filename} does not exist. Uploading now.")
-            sftp.put(local_sql_file_path, remote_filename)
-            print(f"File {remote_filename} uploaded successfully to SFTP server.")
+        # Upload the .tgz file (regardless of modification)
+        sftp.put(tgz_file_path, remote_filename)  ### Ajouté : Téléverser le fichier .tgz
+        print(f"File {remote_filename} uploaded successfully to SFTP server.")
 
 except Exception as e:
     print(f"An error occurred during the upload: {e}")
