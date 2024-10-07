@@ -28,3 +28,11 @@ A prèsent vous pouvez éxecuter le script python "Scripting_System.py", ici nou
 Pour que ce code fonctionne vérifier que les adresses ip correspondent bien à celles de vos VMs.
 
 Normalement, après run de votre code python vous devrier avoir les fichier téléchargés et dézippés dans vos docs en local et le fichier dézipper sur le serveur distant dans le dossier "dossier_partage".
+
+Pour activer la suppression des fichiers au bout d'un certain temps faire : 
+sudo crontab -e
+tu choisis le fichier nano (1)
+et tu ajoutes cette ligne de commande : 
+*/5 * * * * /home/tse/scriptingsystem/clean_sftp.sh
+
+
