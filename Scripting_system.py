@@ -3,8 +3,17 @@ import zipfile
 import os
 import pysftp
 import tarfile
-import logging  # Ajouté pour la journalisation
-from datetime import datetime  # Ajouté pour récupérer la date actuelle
+import logging
+from datetime import datetime
+import json
+
+# Lire le fichier de configuration JSON
+with open('config.json') as config_file:
+    config = json.load(config_file)
+
+# Récupérer les adresses IP (elles sont déjà des chaînes de caractères)
+ip1 = config['serveur']['ip1']
+ip2 = config['serveur']['ip2']
 
 # Générer la date actuelle au format AAAADDMM pour le nom de fichier
 date_str = datetime.now().strftime('%Y%d%m')  # Générer le nom du fichier basé sur la date
@@ -15,9 +24,9 @@ log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'backu
 logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')  # Configuration de la journalisation
 
 # Variables pour le téléchargement (depuis VM1)
-server_ip = 'http://192.168.1.100'  # IP de la VM contenant le fichier ZIP (VM1)
+server_ip = ip1  # IP de la VM contenant le fichier ZIP (VM1)
 file_path = 'test100.sql.zip'
-file_url = f'{server_ip}/{file_path}'  # URL pour télécharger le fichier
+file_url = f'http://{server_ip}/{file_path}'  # URL pour télécharger le fichier (ajout du protocole HTTP)
 
 # Obtenir le répertoire actuel du projet
 current_dir = os.path.dirname(os.path.abspath(__file__))  # Chemin du script exécuté
@@ -25,7 +34,7 @@ local_filename = os.path.join(current_dir, 'test100.sql.telechargement.zip')  # 
 extraction_directory = os.path.join(current_dir, 'extracted_files')  # Répertoire pour les fichiers extraits
 
 # Détails du serveur SFTP (VM2)
-sftp_host = '192.168.1.101'  # IP du serveur SFTP (VM2)
+sftp_host = ip2  # IP du serveur SFTP (VM2)
 sftp_port = 22  # Port du serveur SFTP
 sftp_username = 'tse'  # Nom d'utilisateur pour SFTP
 sftp_password = 'tse'  # Mot de passe pour SFTP
