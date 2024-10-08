@@ -17,11 +17,13 @@ Pour configurer le serveur distant sftpe (sur la VM), éxecutez le fichier "setu
 Une fois votre fichier bash exécuté, appuyer sur "q", vous verrez afficher l'adresse de votre serveur. 
 Récupérer l'adresse ip de votre VM n°2 et mettez la dans votre script python.
 
+
 WINDOWS
 Ouvrez un terminal vérifier que python est bien intsallé "python --version" si ce n'est pas le cas installer le "pyhton".
 Vérifier que pysftp est installer "pip pysftp" si ce n'est pas le cas "pip install pysftp".
 Assurer vous que vous possedez une clef ssh (sinon :"ssh-keygen -t rsa -b 4096 -C "email@adresse.com" ") et un fichier "known_hosts".
-Connectez-vous une première fois au serveur en utilisant l'invite de commande "tse@adresseIPVM2". Mot de passe "tse". Répondre "yes".
+La configuration WINDOWS suivante n'est normalement pas nécessaire, cependant si vous renconter des problèmes suiver les instruction ci dessous
+(Connectez-vous une première fois au serveur en utilisant l'invite de commande "tse@adresseIPVM2". Mot de passe "tse". Répondre "yes".)
 
 SCRIPT PYTHON
 A prèsent vous pouvez éxecuter le script python "Scripting_System.py", ici nous utilisons vscode. 
