@@ -3,17 +3,13 @@ import zipfile
 import os
 import pysftp
 import tarfile
-import logging
-from datetime import datetime
-import json
-
-# Lire le fichier de configuration JSON
-with open('config.json') as config_file:
-    config = json.load(config_file)
-
-# Récupérer les adresses IP (elles sont déjà des chaînes de caractères)
-ip1 = config['serveur']['ip1']
-ip2 = config['serveur']['ip2']
+import logging  # Ajouté pour la journalisation
+from datetime import datetime  # Ajouté pour récupérer la date actuelle
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import smtplib
 
 # Générer la date actuelle au format AAAADDMM pour le nom de fichier
 date_str = datetime.now().strftime('%Y%d%m')  # Générer le nom du fichier basé sur la date
@@ -24,9 +20,9 @@ log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'backu
 logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')  # Configuration de la journalisation
 
 # Variables pour le téléchargement (depuis VM1)
-server_ip = ip1  # IP de la VM contenant le fichier ZIP (VM1)
+server_ip = 'http://192.168.1.107'  # IP de la VM contenant le fichier ZIP (VM1)
 file_path = 'test100.sql.zip'
-file_url = f'http://{server_ip}/{file_path}'  # URL pour télécharger le fichier (ajout du protocole HTTP)
+file_url = f'{server_ip}/{file_path}'  # URL pour télécharger le fichier
 
 # Obtenir le répertoire actuel du projet
 current_dir = os.path.dirname(os.path.abspath(__file__))  # Chemin du script exécuté
@@ -34,7 +30,7 @@ local_filename = os.path.join(current_dir, 'test100.sql.telechargement.zip')  # 
 extraction_directory = os.path.join(current_dir, 'extracted_files')  # Répertoire pour les fichiers extraits
 
 # Détails du serveur SFTP (VM2)
-sftp_host = ip2  # IP du serveur SFTP (VM2)
+sftp_host = '192.168.1.101'  # IP du serveur SFTP (VM2)
 sftp_port = 22  # Port du serveur SFTP
 sftp_username = 'tse'  # Nom d'utilisateur pour SFTP
 sftp_password = 'tse'  # Mot de passe pour SFTP
@@ -87,3 +83,44 @@ try:
 
 except Exception as e:
     logging.error(f"Erreur lors du téléchargement : {e}")  # Enregistrer l'erreur
+    
+# Fonction pour envoyer un e-mail
+def send_email(smtp_server, smtp_port, smtp_username, smtp_password, to_email, subject, body, log_file=None):
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_username
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Attacher le fichier de log si spécifié
+        if log_file:
+            with open(log_file, 'rb') as attachment:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition', f'attachment; filename={os.path.basename(log_file)}')
+                msg.attach(part)
+
+        # Connexion et envoi de l'e-mail
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Activer TLS
+            server.login(smtp_username, smtp_password)
+            server.send_message(msg)
+
+        logging.info(f"E-mail envoyé à {to_email} avec succès.")
+    except Exception as e:
+        logging.error(f"Erreur lors de l'envoi de l'e-mail : {e}")
+
+# Paramètres de l'e-mail
+smtp_server = 'smtp.gmail.com'  # Remplacez par votre serveur SMTP
+smtp_port = 587  # Port SMTP (587 pour TLS)
+smtp_username = 'hunt3r73000@gmail.com'  # Remplacez par votre adresse e-mail
+smtp_password = 'mkfgxoyufjmedupf'  # Remplacez par votre mot de passe
+to_email = 'moreau.romain730@gmail.com'  # Adresse e-mail du destinataire
+subject = f"Rapport de sauvegarde pour {date_str}"  # Titre de l'e-mail
+body = f"Le processus de sauvegarde a été exécuté avec succès. Consultez le fichier de log ci-joint pour plus de détails."
+
+# Envoyer l'e-mail avec le fichier de log attaché
+send_email(smtp_server, smtp_port, smtp_username, smtp_password, to_email, subject, body, log_file_path)
