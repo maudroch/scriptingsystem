@@ -1,10 +1,10 @@
 import urllib.request
 import zipfile
 import os
-import paramiko  # Replace pysftp with paramiko for SFTP handling
+import paramiko 
 import tarfile
-import logging  # Ajouté pour la journalisation
-from datetime import datetime  # Ajouté pour récupérer la date actuelle
+import logging  
+from datetime import datetime 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -12,11 +12,11 @@ from email import encoders
 import smtplib
 import json
 
-# Lire le fichier de configuration JSON
+# Lire le fichier de configuration JSON pour configurer les adresses IP
 with open('config.json') as config_file:
     config = json.load(config_file)
 
-# Récupérer les adresses IP comme chaînes de caractères
+
 ip1 = config['serveur']['ip1']
 ip2 = config['serveur']['ip2']
 
@@ -25,11 +25,11 @@ date_str = datetime.now().strftime('%Y%d%m')  # Générer le nom du fichier bas�
 tgz_filename = f'{date_str}.tgz'  # Nom du fichier .tgz
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'backup_log_{date_str}.log')  # Nouveau chemin du fichier de log
 
-# Configuration du logging
+# Configuration pour les fichiers back_log
 logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')  # Configuration de la journalisation
 
-# Variables pour le téléchargement (depuis VM1)
-server_ip = ip1  # IP de la VM contenant le fichier ZIP (VM1)
+#Config de la VM1 pour 
+server_ip = ip1  # IP de la VM contenant le fichier ZIP 
 file_path = 'test100.sql.zip'
 file_url = f'{server_ip}/{file_path}'  # URL pour télécharger le fichier
 
@@ -38,19 +38,19 @@ current_dir = os.path.dirname(os.path.abspath(__file__))  # Chemin du script ex�
 local_filename = os.path.join(current_dir, 'test100.sql.telechargement.zip')  # Fichier local pour le ZIP
 extraction_directory = os.path.join(current_dir, 'extracted_files')  # Répertoire pour les fichiers extraits
 
-# Détails du serveur SFTP (VM2)
-sftp_host = ip2  # IP du serveur SFTP (VM2)
+# Configuration du serveur SFTP 
+sftp_host = ip2  
 sftp_port = 22  # Port du serveur SFTP
-sftp_username = 'tse'  # Nom d'utilisateur pour SFTP
-sftp_password = 'tse'  # Mot de passe pour SFTP
-remote_directory = '/srv/sftp/dossier_partage'  # Répertoire distant sur VM2
+sftp_username = 'tse'  
+sftp_password = 'tse' 
+remote_directory = '/srv/sftp/dossier_partage'  
 
 # Étape 1 : Télécharger le fichier ZIP depuis VM1
 try:
     urllib.request.urlretrieve(file_url, local_filename)
-    logging.info(f"Fichier téléchargé et enregistré sous {local_filename}")  # Enregistrer l'événement de téléchargement réussi
+    logging.info(f"Fichier téléchargé et enregistré sous {local_filename}") 
 except Exception as e:
-    logging.error(f"Erreur lors du téléchargement : {e}")  # Enregistrer l'erreur
+    logging.error(f"Erreur lors du téléchargement : {e}")  
 
 # Étape 2 : Dézipper le fichier téléchargé
 try:
@@ -59,59 +59,57 @@ try:
 
     with zipfile.ZipFile(local_filename, 'r') as zip_ref:
         zip_ref.extractall(extraction_directory)
-    logging.info(f"Fichiers extraits dans : {extraction_directory}")  # Enregistrer l'événement d'extraction réussi
+    logging.info(f"Fichiers extraits dans : {extraction_directory}") 
 except Exception as e:
-    logging.error(f"Erreur lors de l'extraction : {e}")  # Enregistrer l'erreur
+    logging.error(f"Erreur lors de l'extraction : {e}")  
 
 # Chemin vers le fichier SQL extrait
-local_sql_file_path = os.path.join(extraction_directory, 'test100.sql')  # Chemin vers le fichier SQL
+local_sql_file_path = os.path.join(extraction_directory, 'test100.sql') 
 
 # Étape 3 : Créer un fichier .tgz à partir du fichier SQL extrait
-tgz_file_path = os.path.join(current_dir, tgz_filename)  # Créer le chemin du fichier .tgz
+tgz_file_path = os.path.join(current_dir, tgz_filename)  
 
 try:
     with tarfile.open(tgz_file_path, "w:gz") as tar:  # Compresser le fichier en .tgz
         tar.add(local_sql_file_path, arcname=os.path.basename(local_sql_file_path))
-    logging.info(f"Fichier compressé sous {tgz_file_path}")  # Enregistrer l'événement de compression réussi
+    logging.info(f"Fichier compressé sous {tgz_file_path}") 
 except Exception as e:
-    logging.error(f"Erreur lors de la compression : {e}")  # Enregistrer l'erreur
+    logging.error(f"Erreur lors de la compression : {e}")  
 
 # Étape 4 : Télécharger le fichier .tgz sur le serveur SFTP
 try:
-    # Initialize paramiko SSHClient
     client = paramiko.SSHClient()
 
-    # Load the host keys from known_hosts file if it exists
+    # Si il ne connaît pas la clé, il accepte la connection et il l'enregistre
     known_hosts_file = os.path.expanduser("~/.ssh/known_hosts")
     if os.path.exists(known_hosts_file):
         client.load_host_keys(known_hosts_file)
 
-    # Automatically add the server's host key if it's not found
+    
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    # Connect to the SFTP server
+    # Connection au serveur SFTP
     client.connect(hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password)
-    logging.info(f"Connecté au serveur SFTP {sftp_host} sur le port {sftp_port}")  # Enregistrer la connexion réussie
+    logging.info(f"Connecté au serveur SFTP {sftp_host} sur le port {sftp_port}")  
 
-    # Open an SFTP session
+  
     sftp = client.open_sftp()
 
-    # Changer vers le répertoire distant
+    # Met le fichier sur le répertoire distant
     sftp.chdir(remote_directory)
-    logging.info(f"Changement au répertoire distant : {remote_directory}")  # Enregistrer le changement de répertoire
+    logging.info(f"Changement au répertoire distant : {remote_directory}") 
 
-    # Télécharger le fichier .tgz (indépendamment de la modification)
-    sftp.put(tgz_file_path, tgz_filename)  # Téléverser le fichier .tgz
-    logging.info(f"Fichier {tgz_filename} téléchargé avec succès sur le serveur SFTP.")  # Enregistrer l'événement de téléchargement réussi
+    # Télécharger le fichier .tgz 
+    sftp.put(tgz_file_path, tgz_filename)  
+    logging.info(f"Fichier {tgz_filename} téléchargé avec succès sur le serveur SFTP.") 
 
-    # Close the SFTP session
     sftp.close()
     client.close()
 
 except Exception as e:
-    logging.error(f"Erreur lors du téléchargement : {e}")  # Enregistrer l'erreur
+    logging.error(f"Erreur lors du téléchargement : {e}") 
     
-# Fonction pour envoyer un e-mail
+#Etape 5: envoyer un e-mail
 def send_email(smtp_server, smtp_port, smtp_username, smtp_password, to_email, subject, body, log_file=None):
     try:
         msg = MIMEMultipart()
@@ -121,7 +119,7 @@ def send_email(smtp_server, smtp_port, smtp_username, smtp_password, to_email, s
         
         msg.attach(MIMEText(body, 'plain'))
         
-        # Attacher le fichier de log si spécifié
+        # Attacher le fichier de log 
         if log_file:
             with open(log_file, 'rb') as attachment:
                 part = MIMEBase('application', 'octet-stream')
@@ -141,12 +139,12 @@ def send_email(smtp_server, smtp_port, smtp_username, smtp_password, to_email, s
         logging.error(f"Erreur lors de l'envoi de l'e-mail : {e}")
 
 # Paramètres de l'e-mail
-smtp_server = 'smtp.gmail.com'  # Remplacez par votre serveur SMTP
-smtp_port = 587  # Port SMTP (587 pour TLS)
-smtp_username = 'hunt3r73000@gmail.com'  # Remplacez par votre adresse e-mail
-smtp_password = 'mkfgxoyufjmedupf'  # Remplacez par votre mot de passe
-to_email = 'moreau.romain730@gmail.com'  # Adresse e-mail du destinataire
-subject = f"Rapport de sauvegarde pour {date_str}"  # Titre de l'e-mail
+smtp_server = 'smtp.gmail.com'  
+smtp_port = 587  # Port SMTP
+smtp_username = 'hunt3r73000@gmail.com'
+smtp_password = 'mkfgxoyufjmedupf'  
+to_email = 'moreau.romain730@gmail.com' 
+subject = f"Rapport de sauvegarde pour {date_str}"  
 body = f"Le processus de sauvegarde a été exécuté avec succès. Consultez le fichier de log ci-joint pour plus de détails."
 
 # Envoyer l'e-mail avec le fichier de log attaché
