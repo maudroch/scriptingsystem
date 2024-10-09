@@ -1,7 +1,7 @@
 import urllib.request
 import zipfile
 import os
-import paramiko  # Replace pysftp with paramiko for SFTP handling
+import pysftp
 import tarfile
 import logging  # Ajouté pour la journalisation
 from datetime import datetime  # Ajouté pour récupérer la date actuelle
@@ -10,15 +10,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 import smtplib
-import json
-
-# Lire le fichier de configuration JSON
-with open('config.json') as config_file:
-    config = json.load(config_file)
-
-# Récupérer les adresses IP comme chaînes de caractères
-ip1 = config['serveur']['ip1']
-ip2 = config['serveur']['ip2']
 
 # Générer la date actuelle au format AAAADDMM pour le nom de fichier
 date_str = datetime.now().strftime('%Y%d%m')  # Générer le nom du fichier basé sur la date
@@ -29,7 +20,7 @@ log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'backu
 logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')  # Configuration de la journalisation
 
 # Variables pour le téléchargement (depuis VM1)
-server_ip = ip1  # IP de la VM contenant le fichier ZIP (VM1)
+server_ip = 'http://192.168.1.107'  # IP de la VM contenant le fichier ZIP (VM1)
 file_path = 'test100.sql.zip'
 file_url = f'{server_ip}/{file_path}'  # URL pour télécharger le fichier
 
@@ -39,7 +30,7 @@ local_filename = os.path.join(current_dir, 'test100.sql.telechargement.zip')  # 
 extraction_directory = os.path.join(current_dir, 'extracted_files')  # Répertoire pour les fichiers extraits
 
 # Détails du serveur SFTP (VM2)
-sftp_host = ip2  # IP du serveur SFTP (VM2)
+sftp_host = '192.168.1.101'  # IP du serveur SFTP (VM2)
 sftp_port = 22  # Port du serveur SFTP
 sftp_username = 'tse'  # Nom d'utilisateur pour SFTP
 sftp_password = 'tse'  # Mot de passe pour SFTP
@@ -78,35 +69,17 @@ except Exception as e:
 
 # Étape 4 : Télécharger le fichier .tgz sur le serveur SFTP
 try:
-    # Initialize paramiko SSHClient
-    client = paramiko.SSHClient()
+    # Connecter au serveur SFTP
+    with pysftp.Connection(host=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password) as sftp:
+        logging.info(f"Connecté au serveur SFTP {sftp_host} sur le port {sftp_port}")  # Enregistrer la connexion réussie
 
-    # Load the host keys from known_hosts file if it exists
-    known_hosts_file = os.path.expanduser("~/.ssh/known_hosts")
-    if os.path.exists(known_hosts_file):
-        client.load_host_keys(known_hosts_file)
+        # Changer vers le répertoire distant
+        sftp.chdir(remote_directory)
+        logging.info(f"Changement au répertoire distant : {remote_directory}")  # Enregistrer le changement de répertoire
 
-    # Automatically add the server's host key if it's not found
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    # Connect to the SFTP server
-    client.connect(hostname=sftp_host, port=sftp_port, username=sftp_username, password=sftp_password)
-    logging.info(f"Connecté au serveur SFTP {sftp_host} sur le port {sftp_port}")  # Enregistrer la connexion réussie
-
-    # Open an SFTP session
-    sftp = client.open_sftp()
-
-    # Changer vers le répertoire distant
-    sftp.chdir(remote_directory)
-    logging.info(f"Changement au répertoire distant : {remote_directory}")  # Enregistrer le changement de répertoire
-
-    # Télécharger le fichier .tgz (indépendamment de la modification)
-    sftp.put(tgz_file_path, tgz_filename)  # Téléverser le fichier .tgz
-    logging.info(f"Fichier {tgz_filename} téléchargé avec succès sur le serveur SFTP.")  # Enregistrer l'événement de téléchargement réussi
-
-    # Close the SFTP session
-    sftp.close()
-    client.close()
+        # Télécharger le fichier .tgz (indépendamment de la modification)
+        sftp.put(tgz_file_path, tgz_filename)  # Téléverser le fichier .tgz
+        logging.info(f"Fichier {tgz_filename} téléchargé avec succès sur le serveur SFTP.")  # Enregistrer l'événement de téléchargement réussi
 
 except Exception as e:
     logging.error(f"Erreur lors du téléchargement : {e}")  # Enregistrer l'erreur
