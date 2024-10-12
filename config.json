@@ -1,6 +1,13 @@
 {
   "serveur": {
-    "ip1": "192.168.1.106",
-    "ip2": "192.168.1.101"
+    "ip1": "192.168.1.45",
+    "ip2": "192.168.1.209"
+  },
+  "mail_destinataire": {
+    "adresse_mail_destination": "louise.blein42@gmail.com"
+  },
+  "mail_serveur": {
+    "adresse_mail_smtp": "hunt3r73000@gmail.com",
+    "mot_de_passe": "mkfgxoyufjmedupf"
   }
 }
