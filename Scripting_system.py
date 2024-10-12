@@ -138,7 +138,7 @@ def send_email(smtp_server, smtp_port, smtp_username, smtp_password, to_email, s
     except Exception as e:
         logging.error(f"Erreur lors de l'envoi de l'e-mail : {e}")
 
-# Paramètres de l'e-mail
+# Paramètres de l'e-mail (ces paramètre ne doivent être modifié que dans le fichier "config.json")
 smtp_server = 'smtp.gmail.com'  
 smtp_port = 587  # Port SMTP
 smtp_username = config['mail_serveur']['adresse_mail_smtp']
