@@ -20,7 +20,7 @@ Récupérer l'adresse ip de votre VM n°2 et mettez la dans votre script python.
 
 WINDOWS
 Ouvrez un terminal vérifier que python est bien intsallé "python --version" si ce n'est pas le cas installer le "pyhton".
-Vérifier que pysftp est installer "pip pysftp" si ce n'est pas le cas "pip install pysftp".
+Vérifier que pysftp est installer "pip pysftp" si ce n'est pas le cas "pip install pysftp".Faite de même pour les librairies "paramiko" et présentes dans le ".py".
 Assurer vous que vous possedez une clef ssh (sinon :"ssh-keygen -t rsa -b 4096 -C "email@adresse.com" ") et un fichier "known_hosts".
 La configuration WINDOWS suivante n'est normalement pas nécessaire, cependant si vous renconter des problèmes suiver les instruction ci dessous
 (Connectez-vous une première fois au serveur en utilisant l'invite de commande "tse@adresseIPVM2". Mot de passe "tse". Répondre "yes".)
@@ -36,5 +36,9 @@ sudo crontab -e
 tu choisis le fichier nano (1)
 et tu ajoutes cette ligne de commande : 
 */5 * * * * /home/tse/scriptingsystem/clean_sftp.sh
+
+FICHIER "config.json"
+Ce fichier permet de ne pas modifier directement le script python.
+Dedans vous pourrez modifier les @IPs et les email de destination et envoi.
 
 
