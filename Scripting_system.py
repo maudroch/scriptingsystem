@@ -141,9 +141,9 @@ def send_email(smtp_server, smtp_port, smtp_username, smtp_password, to_email, s
 # Paramètres de l'e-mail
 smtp_server = 'smtp.gmail.com'  
 smtp_port = 587  # Port SMTP
-smtp_username = 'hunt3r73000@gmail.com'
-smtp_password = 'mkfgxoyufjmedupf'  
-to_email = 'moreau.romain730@gmail.com' 
+smtp_username = config['mail_serveur']['adresse_mail_smtp']
+smtp_password = config['mail_serveur']['mot_de_passe']
+to_email = config['mail_destinataire']['adresse_mail_destination']
 subject = f"Rapport de sauvegarde pour {date_str}"  
 body = f"Le processus de sauvegarde a été exécuté avec succès. Consultez le fichier de log ci-joint pour plus de détails."
 
