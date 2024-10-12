@@ -1,10 +1,10 @@
 {
   "serveur": {
-    "ip1": "192.168.1.45",
-    "ip2": "192.168.1.209"
+    "ip1": "@IP_VM1",
+    "ip2": "@IP_VM2"
   },
   "mail_destinataire": {
-    "adresse_mail_destination": "louise.blein42@gmail.com"
+    "adresse_mail_destination": "adresse.mail@gmail.com"
   },
   "mail_serveur": {
     "adresse_mail_smtp": "hunt3r73000@gmail.com",
